@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="笔记类型供给与转化看板的交互演示版。所有数字均为演示数据。">
+  <title>笔记类型 · 供给与转化看板｜演示版</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="site-head">
+      <div class="title-row"><h1>小红书笔记类型 · 供给与转化看板</h1><span class="version">演示版</span></div>
+      <div class="subtitle-row"><span>按类型拆解笔记的每日新增供给、引导成交、互动表现与流量效率。</span><span class="status-chip">演示数据 · 不连接内部系统</span><span id="dateStamp">数据日期 2026-11-03</span></div>
+    </header>
+
+    <nav class="top-nav" aria-label="看板栏目" id="mainTabs"></nav>
+    <main>
+      <section class="filter-panel" aria-label="筛选条件">
+        <div class="date-control"><label for="startDate">起始日期</label><input id="startDate" type="date" value="2026-07-01" min="2026-04-25" max="2026-11-03"></div>
+        <span class="date-dash">—</span>
+        <div class="date-control"><label for="endDate">截止日期</label><input id="endDate" type="date" value="2026-11-03" min="2026-04-25" max="2026-11-03"></div>
+        <button class="primary" id="refreshBtn">刷新数据</button>
+        <span class="muted filter-hint">日期筛选作用于演示曲线与汇总</span>
+      </section>
+      <section id="content" aria-live="polite"></section>
+    </main>
+    <footer class="footer">界面复刻演示 · 所有数值为合成示例，仅用于体验交互与布局</footer>
+    <button class="float-status" id="statusBtn" title="查看数据状态">⏳ <span>数据状态</span></button>
+    <dialog id="statusDialog"><div class="dialog-head"><h2>数据状态</h2><button id="closeDialog" aria-label="关闭">×</button></div><p>这是静态演示版。图表和表格由浏览器内的合成数据生成，不连接原看板或内部数据源。</p><p>日期、栏目、指标和排序可在本地交互。</p></dialog>
+  </div>
+  <script src="./app.js"></script>
+</body>
+</html>
