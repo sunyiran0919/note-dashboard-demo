@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>种草圈子 - 从笔记到购物圈</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { width: 100%; height: 100%; overflow: hidden; }
+    body {
+      font-family: -apple-system, "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+      background: #e0e0e2;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .phone {
+      width: 390px;
+      height: 844px;
+      border-radius: 44px;
+      overflow: hidden;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.22);
+      position: relative;
+      flex-shrink: 0;
+    }
+    .screen {
+      display: none;
+      flex-direction: column;
+      width: 390px;
+      height: 844px;
+      background: #fff;
+      overflow: hidden;
+      position: absolute;
+      top: 0; left: 0;
+    }
+    .screen.active { display: flex; }
+    .status-bar {
+      flex-shrink: 0;
+      height: 44px;
+      padding: 12px 20px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 15px;
+      font-weight: 700;
+      color: #111;
+      background: #fff;
+    }
+
+    /* ── 圈子页 ── */
+    #s-circle { background: #f5f5f7; }
+    .circle-hero {
+      flex-shrink: 0;
+      background: linear-gradient(155deg,#ff2442 0%,#ff6070 60%,#ffb0ba 100%);
+      padding: 0 16px 18px;
+    }
+    .circle-hero-topbar { height: 50px; display: flex; align-items: center; justify-content: space-between; }
+    .circle-back { width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; font-size: 22px; color: #fff; cursor: pointer; }
+    .circle-cover-row { display: flex; align-items: center; gap: 14px; }
+    .circle-logo { width: 64px; height: 64px; border-radius: 18px; background: #fff; display: flex; align-items: center; justify-content: center; font-size: 30px; flex-shrink: 0; box-shadow: 0 4px 14px rgba(0,0,0,.15); }
+    .circle-info { flex: 1; }
+    .circle-name { font-size: 20px; font-weight: 800; color: #fff; margin-bottom: 5px; }
+    .circle-member-row { display: flex; align-items: center; gap: 0; margin-bottom: 5px; }
+    .circle-avatars { display: flex; }
+    .c-ava { width: 20px; height: 20px; border-radius: 50%; border: 2px solid rgba(255,255,255,.8); margin-right: -5px; display: flex; align-items: center; justify-content: center; font-size: 9px; background: rgba(255,255,255,.5); }
+    .circle-member-count { font-size: 12px; color: rgba(255,255,255,.9); margin-left: 14px; }
+    .circle-desc { font-size: 12px; color: rgba(255,255,255,.8); }
+    .circle-join-btn { flex-shrink: 0; background: #fff; color: #ff2442; border: none; border-radius: 24px; padding: 10px 24px; font-size: 15px; font-weight: 800; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,.12); }
+    .circle-join-btn.joined { background: rgba(255,255,255,.25); color: #fff; box-shadow: none; }
+    .circle-tabs-bar { flex-shrink: 0; background: #fff; display: flex; overflow-x: auto; scrollbar-width: none; border-bottom: 1px solid #f0f0f0; }
+    .circle-tabs-bar::-webkit-scrollbar { display: none; }
+    .c-tab { padding: 11px 16px; font-size: 14px; color: #888; white-space: nowrap; cursor: pointer; position: relative; flex-shrink: 0; }
+    .c-tab.active { color: #ff2442; font-weight: 700; }
+    .c-tab.active::after { content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 22px; height: 2.5px; background: #ff2442; border-radius: 2px; }
+    .circle-scroll { flex: 1; overflow-y: auto; min-height: 0; }
+    .feed-item { background: #fff; padding: 14px 16px 0; margin-bottom: 8px; }
+    .feed-hdr { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px; }
+    .feed-ava { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+    .fa1 { background: linear-gradient(135deg,#e8f4fd,#c8dcf5); }
+    .fa2 { background: linear-gradient(135deg,#ffeef0,#ffd6dc); }
+    .fa3 { background: linear-gradient(135deg,#e8f5e9,#c8e6c9); }
+    .feed-author { font-size: 14px; font-weight: 700; color: #111; margin-bottom: 2px; }
+    .feed-time { font-size: 11px; color: #bbb; }
+    .feed-ellipsis { margin-left: auto; font-size: 18px; color: #ccc; cursor: pointer; }
+    .feed-text { font-size: 14px; color: #333; line-height: 1.7; margin-bottom: 12px; }
+    .feed-reply-box { background: #f9f9f9; border-radius: 8px; padding: 8px 10px; margin-bottom: 12px; }
+    .feed-reply { font-size: 12px; color: #555; line-height: 1.6; margin-bottom: 4px; }
+    .feed-reply:last-child { margin-bottom: 0; }
+    .feed-more-reply { font-size: 12px; color: #bbb; margin-top: 4px; cursor: pointer; }
+    .feed-actions { display: flex; gap: 20px; border-top: 1px solid #f5f5f5; padding: 10px 0 14px; font-size: 13px; color: #999; }
+    .feed-action { display: flex; align-items: center; gap: 5px; cursor: pointer; }
+    .feed-action.upvoted { color: #ff2442; }
+    .circle-bottom { flex-shrink: 0; background: #fff; border-top: 1px solid #f0f0f0; padding: 10px 16px 28px; display: flex; align-items: center; gap: 10px; }
+    .cb-input { flex: 1; background: #f5f5f7; border: none; border-radius: 20px; padding: 9px 16px; font-size: 13px; color: #bbb; outline: none; }
+    .cb-post { background: #ff2442; color: #fff; border: none; border-radius: 20px; padding: 9px 20px; font-size: 14px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+
+    .toast { position: fixed; bottom: 110px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,.72); color: #fff; font-size: 13px; padding: 7px 18px; border-radius: 20px; z-index: 999; display: none; white-space: nowrap; pointer-events: none; }
+    /* Home and note detail from the note-entry demo. */
+
+    .home-topbar {
+      flex-shrink: 0;
+      padding: 4px 16px 8px;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      border-bottom: 1px solid #f5f5f5;
+    }
+    .home-logo { font-size: 22px; font-weight: 900; color: #ff2442; margin-right: 16px; flex-shrink: 0; }
+    .home-tabs { display: flex; gap: 2px; flex: 1; overflow-x: auto; scrollbar-width: none; }
+    .home-tabs::-webkit-scrollbar { display: none; }
+    .home-tab { padding: 6px 12px; font-size: 15px; color: #888; white-space: nowrap; cursor: pointer; border-radius: 20px; flex-shrink: 0; }
+    .home-tab.active { color: #111; font-weight: 800; }
+    .home-scroll { flex: 1; overflow-y: auto; min-height: 0; }
+    .waterfall { columns: 2; column-gap: 6px; padding: 8px 8px 80px; }
+    .note-card { background: #fff; border-radius: 12px; overflow: hidden; break-inside: avoid; margin-bottom: 6px; display: inline-block; width: 100%; cursor: pointer; position: relative; }
+    .note-thumb { width: 100%; display: flex; align-items: center; justify-content: center; font-size: 50px; position: relative; }
+    .note-thumb.r43 { aspect-ratio: 3/4; }
+    .note-thumb.r11 { aspect-ratio: 1/1; }
+    .note-thumb.r32 { aspect-ratio: 3/2; }
+    .bg1 { background: linear-gradient(145deg,#ffeef1,#ffd6dc); }
+    .bg2 { background: linear-gradient(145deg,#fff4e6,#ffd9b0); }
+    .bg3 { background: linear-gradient(145deg,#e8f4ff,#c8e0ff); }
+    .bg4 { background: linear-gradient(145deg,#f0ffe6,#c8f0b0); }
+    .bg5 { background: linear-gradient(145deg,#fff0f8,#ffd6ee); }
+    .bg6 { background: linear-gradient(145deg,#f5f0ff,#ddd0ff); }
+    .badge-ad { position: absolute; top: 6px; right: 6px; background: rgba(0,0,0,.35); color: #fff; font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 600; }
+    .badge-promo { position: absolute; top: 6px; right: 6px; background: rgba(0,0,0,.25); color: #fff; font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 600; }
+    .badge-shidan { position: absolute; top: 8px; left: 8px; background: #ff2442; color: #fff; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 4px; z-index: 2; }
+    .note-info { padding: 7px 9px 9px; }
+    .note-title { font-size: 13px; color: #111; line-height: 1.45; margin-bottom: 7px; font-weight: 500; }
+    .note-author-row { display: flex; align-items: center; gap: 5px; }
+    .note-ava { width: 18px; height: 18px; border-radius: 50%; background: #f0f0f0; display: flex; align-items: center; justify-content: center; font-size: 10px; flex-shrink: 0; }
+    .note-author { font-size: 11px; color: #bbb; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .note-likes { font-size: 11px; color: #bbb; flex-shrink: 0; }
+    .home-bottom-bar {
+      flex-shrink: 0;
+      height: 60px;
+      background: #fff;
+      border-top: 1px solid #f0f0f0;
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      padding-bottom: 6px;
+    }
+    .hbb-item { display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 10px; color: #bbb; cursor: pointer; padding: 4px 10px; }
+    .hbb-item.active { color: #ff2442; font-weight: 700; }
+    .hbb-icon { font-size: 22px; line-height: 1; }
+    .hbb-post { width: 46px; height: 46px; background: #ff2442; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 26px; font-weight: 300; cursor: pointer; box-shadow: 0 4px 14px rgba(255,36,66,.38); }
+
+    /* ── 笔记详情 ── */
+    #s-note { background: #fff; }
+    .note-scroll { flex: 1; overflow-y: auto; min-height: 0; }
+    .note-imgs {
+      width: 100%; aspect-ratio: 3/3.6;
+      background: linear-gradient(155deg,#ffeef1 0%,#ffd6dc 55%,#ffbbc8 100%);
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+      position: relative;
+    }
+    .note-topbar { position: absolute; top: 0; left: 0; right: 0; z-index: 20; padding: 0 14px; }
+    .note-sb { height: 44px; padding: 12px 0 0; display: flex; justify-content: space-between; align-items: center; font-size: 15px; font-weight: 700; color: #fff; }
+    .note-topbar-inner { display: flex; align-items: center; justify-content: space-between; }
+    .back-btn { width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; font-size: 22px; color: #fff; cursor: pointer; filter: drop-shadow(0 1px 3px rgba(0,0,0,.3)); }
+    .note-topbar-right { display: flex; gap: 14px; font-size: 20px; color: #fff; filter: drop-shadow(0 1px 3px rgba(0,0,0,.2)); }
+    .note-page-dots { position: absolute; bottom: 12px; display: flex; gap: 5px; }
+    .dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,.45); }
+    .dot.on { width: 16px; border-radius: 3px; background: #fff; }
+    .note-content { padding: 16px 16px 0; }
+    .note-author-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+    .nav-avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg,#ffd6dc,#ffb3be); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+    .nav-name { font-size: 14px; font-weight: 700; color: #111; }
+    .nav-desc { font-size: 11px; color: #bbb; margin-top: 2px; }
+    .nav-follow { margin-left: auto; background: transparent; border: 1.5px solid #ff2442; color: #ff2442; border-radius: 16px; padding: 5px 16px; font-size: 13px; font-weight: 700; cursor: pointer; flex-shrink: 0; }
+    .note-main-title { font-size: 17px; font-weight: 800; color: #111; line-height: 1.45; margin-bottom: 12px; }
+    .note-body { font-size: 14px; color: #333; line-height: 1.85; margin-bottom: 12px; }
+    .note-body p { margin-bottom: 10px; }
+    .note-body strong { color: #111; }
+    .note-buy-widget { background: #f9f9f9; border-radius: 12px; padding: 11px 12px; display: flex; align-items: center; gap: 10px; margin-bottom: 14px; cursor: pointer; border: 1px solid #f0f0f0; }
+    .nbw-img { width: 48px; height: 48px; background: #fff; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; }
+    .nbw-info { flex: 1; }
+    .nbw-name { font-size: 13px; color: #111; font-weight: 600; margin-bottom: 3px; }
+    .nbw-price { font-size: 16px; color: #ff2442; font-weight: 800; }
+    .nbw-origin { font-size: 12px; color: #bbb; text-decoration: line-through; margin-left: 6px; }
+    .nbw-rating { font-size: 11px; color: #888; margin-top: 2px; }
+    .nbw-btn { flex-shrink: 0; background: #ff2442; color: #fff; border: none; border-radius: 20px; padding: 9px 18px; font-size: 13px; font-weight: 700; cursor: pointer; }
+    .note-hashtags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+    .note-hashtag { font-size: 13px; color: #617fff; cursor: pointer; }
+    .note-meta { font-size: 12px; color: #ccc; margin-bottom: 0; }
+
+    /* 圈子入口组件 */
+    .note-circle-entry {
+      border-top: 1px solid #f5f5f5;
+      border-bottom: 1px solid #f5f5f5;
+      padding: 13px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      background: #fff;
+      margin-top: 14px;
+    }
+    .nce-logo { width: 52px; height: 52px; border-radius: 14px; background: linear-gradient(135deg,#ff2442,#ff7080); display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; }
+    .nce-body { flex: 1; min-width: 0; }
+    .nce-name-row { display: flex; align-items: center; gap: 6px; margin-bottom: 3px; }
+    .nce-name { font-size: 15px; font-weight: 700; color: #111; }
+    .nce-badge { font-size: 11px; color: #999; background: #f5f5f5; border-radius: 4px; padding: 1px 6px; flex-shrink: 0; }
+    .nce-members { font-size: 12px; color: #999; }
+    .nce-btn { flex-shrink: 0; background: #ff2442; color: #fff; border: none; border-radius: 20px; padding: 8px 18px; font-size: 14px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+
+    .note-comments { padding: 14px 16px 100px; }
+    .comment-count { font-size: 14px; font-weight: 700; color: #111; margin-bottom: 14px; }
+    .comment-item { display: flex; gap: 10px; margin-bottom: 16px; }
+    .cmt-avatar { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+    .c1 { background: #e8f4fd; } .c2 { background: #e8f5e9; } .c3 { background: #fff0e6; }
+    .cmt-body { flex: 1; }
+    .cmt-name { font-size: 13px; font-weight: 700; color: #444; margin-bottom: 3px; }
+    .cmt-text { font-size: 13px; color: #333; line-height: 1.6; }
+    .cmt-footer { display: flex; align-items: center; gap: 8px; margin-top: 5px; }
+    .cmt-time { font-size: 11px; color: #ccc; flex: 1; }
+    .cmt-like { font-size: 12px; color: #bbb; cursor: pointer; }
+    .cmt-replies { background: #f9f9f9; border-radius: 8px; padding: 8px 10px; margin-top: 8px; }
+    .cmt-reply { font-size: 12px; color: #555; line-height: 1.6; margin-bottom: 4px; }
+    .cmt-more { font-size: 12px; color: #bbb; margin-top: 4px; cursor: pointer; }
+    .note-bottom { flex-shrink: 0; background: #fff; border-top: 1px solid #f0f0f0; padding: 10px 16px 28px; display: flex; align-items: center; gap: 16px; }
+    .nbt-input { flex: 1; background: #f5f5f7; border: none; border-radius: 20px; padding: 9px 16px; font-size: 13px; color: #bbb; outline: none; }
+    .nbt-action { display: flex; flex-direction: column; align-items: center; gap: 2px; cursor: pointer; flex-shrink: 0; }
+    .nbt-icon { font-size: 22px; line-height: 1; }
+    .nbt-count { font-size: 10px; color: #bbb; }
+
+    
+    /* Keep the phone preview visible in short windows and on narrow screens. */
+    .phone { width: min(390px, 100vw); height: min(844px, calc(100dvh - 24px)); }
+    .screen { width: 100%; height: 100%; }
+    @media (max-width: 430px) {
+      .phone { height: 100dvh; border-radius: 0; }
+    }
+  </style>
+</head>
+<body>
+<div class="phone">
+
+  <!-- ===== SCREEN 1: 搜索结果页（默认） ===== -->
+  <div id="s-home" class="screen active">
+    <div class="status-bar"><span>9:41</span><div style="display:flex;gap:4px;font-size:13px;">📶 🔋</div></div>
+    <div class="home-topbar">
+      <div class="home-logo">小红书</div>
+      <div class="home-tabs">
+        <div class="home-tab">关注</div>
+        <div class="home-tab active">发现</div>
+        <div class="home-tab">上海</div>
+      </div>
+      <span style="font-size:22px;color:#333;cursor:pointer;margin-left:8px;" onclick="showSearch()">🔍</span>
+    </div>
+    <div class="home-scroll">
+      <div class="waterfall">
+        <div class="note-card" onclick="showNote()">
+          <div class="badge-shidan">晒单</div>
+          <div class="note-thumb r43 bg1">🤖</div>
+          <div class="note-info">
+            <div class="note-title">用了3个月PETKIT PURA MAX，真实感受来了（非广）</div>
+            <div class="note-author-row">
+              <div class="note-ava">🐱</div>
+              <div class="note-author">橙子养猫</div>
+              <div class="note-likes">❤️ 2.3w</div>
+            </div>
+          </div>
+        </div>
+        <div class="note-card">
+          <div class="badge-ad">广告</div>
+          <div class="note-thumb r43 bg2">🏆</div>
+          <div class="note-info">
+            <div class="note-title">PETKIT官方｜新款自动猫砂盆全面升级</div>
+            <div class="note-author-row">
+              <div class="note-ava">P</div>
+              <div class="note-author">PETKIT官方</div>
+              <div class="note-likes">❤️ 5.1w</div>
+            </div>
+          </div>
+        </div>
+        <div class="note-card" onclick="showNote()">
+          <div class="badge-shidan">晒单</div>
+          <div class="note-thumb r11 bg5">☕</div>
+          <div class="note-info">
+            <div class="note-title">从猫矩阵换到小佩CATLINK半年体验</div>
+            <div class="note-author-row">
+              <div class="note-ava">☕</div>
+              <div class="note-author">奶茶猫奴</div>
+              <div class="note-likes">❤️ 4.1w</div>
+            </div>
+          </div>
+        </div>
+        <div class="note-card">
+          <div class="note-thumb r43 bg3">🐠</div>
+          <div class="note-info">
+            <div class="note-title">猫鱼混养了两年，分享我的养猫日常</div>
+            <div class="note-author-row">
+              <div class="note-ava">🐠</div>
+              <div class="note-author">鱼与猫的故事</div>
+              <div class="note-likes">❤️ 8.8k</div>
+            </div>
+          </div>
+        </div>
+        <div class="note-card" onclick="showNote()">
+          <div class="badge-shidan">晒单</div>
+          <div class="note-thumb r43 bg4">🏆</div>
+          <div class="note-info">
+            <div class="note-title">踩了3000块的坑后，这款才是终结者</div>
+            <div class="note-author-row">
+              <div class="note-ava">🌻</div>
+              <div class="note-author">向日葵猫场</div>
+              <div class="note-likes">❤️ 1.9w</div>
+            </div>
+          </div>
+        </div>
+        <div class="note-card">
+          <div class="badge-promo">推广</div>
+          <div class="note-thumb r32 bg6">🐈</div>
+          <div class="note-info">
+            <div class="note-title">养猫新手必看！猫砂盆选购避雷指南</div>
+            <div class="note-author-row">
+              <div class="note-ava">🐈</div>
+              <div class="note-author">喵星人养成记</div>
+              <div class="note-likes">❤️ 2.2w</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="home-bottom-bar">
+      <div class="hbb-item active"><div class="hbb-icon">🏠</div>首页</div>
+      <div class="hbb-item" onclick="showSearch()"><div class="hbb-icon">🔍</div>探索</div>
+      <div class="hbb-post">＋</div>
+      <div class="hbb-item"><div class="hbb-icon">🛒</div>市集</div>
+      <div class="hbb-item"><div class="hbb-icon">👤</div>我</div>
+    </div>
+  </div><!-- #s-home -->
+
+  <!-- ===== SCREEN 2: 笔记详情页 ===== -->
+  <div id="s-note" class="screen">
+    <div class="note-scroll">
+      <div class="note-imgs">
+        <div class="note-topbar">
+          <div class="note-sb">
+            <span>9:41</span>
+            <div style="display:flex;gap:4px;font-size:13px;">📶 🔋</div>
+          </div>
+          <div class="note-topbar-inner">
+            <div class="back-btn" onclick="goBack('s-home')">‹</div>
+            <div class="note-topbar-right">
+              <span>☆</span><span>↗</span><span>⋯</span>
+            </div>
+          </div>
+        </div>
+        <div style="font-size:64px;">🤖🐾</div>
+        <div style="font-size:14px;color:#ff2442;font-weight:800;">PETKIT PURA MAX 深度使用报告</div>
+        <div style="font-size:12px;color:#ff9090;">用了 3 个月，说说真实感受</div>
+        <div class="note-page-dots">
+          <div class="dot on"></div><div class="dot"></div><div class="dot"></div>
+        </div>
+      </div>
+      <div class="note-content">
+        <div class="note-author-bar">
+          <div class="nav-avatar">🐱</div>
+          <div>
+            <div class="nav-name">橙子养猫日记</div>
+            <div class="nav-desc">养猫 3 年 · 2 只猫主子 · 上海</div>
+          </div>
+          <button class="nav-follow">+ 关注</button>
+        </div>
+        <div class="note-main-title">用了三个月的 PETKIT PURA MAX，来说说真实感受（非广）</div>
+        <div class="note-body">
+          <p>种草了很久，趁双十一入手 PETKIT PURA MAX，¥1,999。用了三个月来复盘。</p>
+          <p><strong>【清洁效果】✅</strong> 自动清洁很稳定，猫咪离开 3 分钟后清洁，基本保持干净。</p>
+          <p><strong>【最惊喜】✅</strong> 健康追踪！App 记录每天上厕所次数，发现大橘连续两天次数减少，带去看医生发现是泌尿问题——<strong>早发现早治疗，可能救了猫的命</strong>。</p>
+          <p><strong>【缺点】❌</strong> 半夜自动清洁有声音，建议在 App 设置免打扰时间段。</p>
+          <p>总结：预算够的话强烈推荐，健康监测超值。</p>
+        </div>
+        <div class="note-buy-widget" onclick="toast('跳转商品详情页 🛒')">
+          <div class="nbw-img">🤖</div>
+          <div class="nbw-info">
+            <div class="nbw-name">PETKIT PURA MAX 全自动猫砂盆</div>
+            <div style="display:flex;align-items:baseline;">
+              <span class="nbw-price">¥1,999</span>
+              <span class="nbw-origin">¥2,399</span>
+            </div>
+            <div class="nbw-rating">⭐ 4.8 · 3,214 人购买</div>
+          </div>
+          <button class="nbw-btn">去购买</button>
+        </div>
+        <div class="note-hashtags">
+          <span class="note-hashtag">#自动猫砂盆</span>
+          <span class="note-hashtag">#PETKIT</span>
+          <span class="note-hashtag">#养猫必备</span>
+          <span class="note-hashtag">#猫咪健康</span>
+        </div>
+        <div class="note-meta">编辑于 3 天前 · 上海</div>
+      </div>
+      <!-- 圈子入口 -->
+      <div class="note-circle-entry" onclick="showCircle()">
+        <div class="nce-logo">🐾</div>
+        <div class="nce-body">
+          <div class="nce-name-row">
+            <span class="nce-name">自动猫砂盆购物圈</span>
+            <span class="nce-badge">小红书圈子</span>
+          </div>
+          <div class="nce-members">和 <strong>12,847</strong> 位圈友一起种草 · 比较 · 拔草</div>
+        </div>
+        <button class="nce-btn" onclick="event.stopPropagation();showCircle()">进圈聊聊</button>
+      </div>
+      <div class="note-comments">
+        <div class="comment-count">评论 98</div>
+        <div class="comment-item">
+          <div class="cmt-avatar c1">😺</div>
+          <div class="cmt-body">
+            <div class="cmt-name">苦逼三猫奴</div>
+            <div class="cmt-text">我也有同款！声音问题把静音时间设成 23:00-7:00 就解决了</div>
+            <div class="cmt-footer">
+              <span class="cmt-time">2 小时前 · 河南</span>
+              <span class="cmt-like">❤️ 234</span>
+            </div>
+            <div class="cmt-replies">
+              <div class="cmt-reply"><strong>橙子养猫日记：</strong>真的有用！！刚设置好了，感谢🙏</div>
+              <div class="cmt-more">共 5 条评论 ›</div>
+            </div>
+          </div>
+        </div>
+        <div class="comment-item">
+          <div class="cmt-avatar c2">🐾</div>
+          <div class="cmt-body">
+            <div class="cmt-name">囧囧养猫记</div>
+            <div class="cmt-text">健康追踪真的是神功能，我也靠它发现猫咪便秘，感谢博主分享！</div>
+            <div class="cmt-footer">
+              <span class="cmt-time">5 小时前 · 广东</span>
+              <span class="cmt-like">❤️ 89</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="note-bottom">
+      <input class="nbt-input" placeholder="说点什么…" readonly />
+      <div class="nbt-action"><div class="nbt-icon" style="color:#ff2442">❤️</div><div class="nbt-count" style="color:#ff2442">2,341</div></div>
+      <div class="nbt-action"><div class="nbt-icon">☆</div><div class="nbt-count">876</div></div>
+      <div class="nbt-action"><div class="nbt-icon">💬</div><div class="nbt-count">98</div></div>
+    </div>
+  </div><!-- #s-note -->
+  <div id="s-search" class="screen">
+    <div class="status-bar"><span>9:41</span><div style="display:flex;gap:4px;font-size:13px;">📶 🔋</div></div>
+    <!-- 搜索框 -->
+    <div style="padding:6px 14px 0;background:#fff;border-bottom:1px solid #f0f0f0;flex-shrink:0;">
+      <div style="display:flex;align-items:center;gap:8px;padding-bottom:10px;">
+        <button aria-label="返回首页" onclick="goBack('s-home')" style="border:0;background:none;font-size:28px;line-height:1;color:#333;cursor:pointer;">‹</button>
+        <div style="flex:1;background:#f4f4f6;border-radius:20px;padding:9px 14px;display:flex;align-items:center;gap:8px;font-size:15px;">
+          <span style="color:#ccc;">🔍</span>
+          <span style="color:#111;font-weight:600;">自动猫砂盆</span>
+          <span style="color:#ccc;margin-left:auto;">✕</span>
+        </div>
+        <span style="font-size:14px;color:#ff2442;font-weight:700;white-space:nowrap;">搜索</span>
+      </div>
+      <!-- 类型 Tab -->
+      <div style="display:flex;overflow-x:auto;scrollbar-width:none;">
+        <div style="padding:5px 14px;font-size:13px;color:#888;white-space:nowrap;cursor:pointer;">综合</div>
+        <div style="padding:5px 14px;font-size:13px;color:#ff2442;font-weight:700;white-space:nowrap;border-bottom:2px solid #ff2442;">笔记</div>
+        <div style="padding:5px 14px;font-size:13px;color:#888;white-space:nowrap;cursor:pointer;">视频</div>
+        <div style="padding:5px 14px;font-size:13px;color:#888;white-space:nowrap;cursor:pointer;">购买</div>
+        <div style="padding:5px 14px;font-size:13px;color:#888;white-space:nowrap;cursor:pointer;">🤖 问一问</div>
+      </div>
+    </div>
+    <!-- 滚动区 -->
+    <div style="flex:1;overflow-y:auto;min-height:0;">
+      <!-- 圈子入口 Banner -->
+      <div onclick="showCircle()" style="margin:12px 14px;background:linear-gradient(135deg,#fff1f3,#ffe8ec);border:1.5px solid #ffccd5;border-radius:14px;padding:13px 14px;display:flex;align-items:center;gap:12px;cursor:pointer;">
+        <div style="width:46px;height:46px;background:linear-gradient(135deg,#ff2442,#ff7080);border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">🐾</div>
+        <div style="flex:1;">
+          <div style="font-size:14px;font-weight:800;color:#111;display:flex;align-items:center;gap:6px;margin-bottom:3px;">
+            自动猫砂盆购物圈
+            <span style="background:#ff2442;color:#fff;font-size:10px;padding:1px 5px;border-radius:4px;font-weight:700;">AI</span>
+          </div>
+          <div style="font-size:12px;color:#888;margin-bottom:5px;">真实晒单 · AI横评 · <span style="color:#ff2442;font-weight:600;">已过滤广告内容</span></div>
+          <div style="display:flex;gap:10px;">
+            <span style="font-size:11px;color:#999;"><strong style="color:#444;">3,847</strong> 真实评价</span>
+            <span style="font-size:11px;color:#999;"><strong style="color:#444;">12</strong> 款横评</span>
+            <span style="font-size:11px;color:#999;"><strong style="color:#444;">今日</strong>更新</span>
+          </div>
+        </div>
+        <button onclick="event.stopPropagation();showCircle()" style="background:#ff2442;color:#fff;border:none;border-radius:18px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;">进圈子</button>
+      </div>
+      <!-- 广告提示条 -->
+      <div style="margin:0 14px 10px;background:#fffbf0;border:1px solid #ffe58f;border-radius:8px;padding:7px 12px;font-size:12px;color:#8a6d00;display:flex;align-items:center;justify-content:space-between;">
+        <span>⚠️ 以下结果含品牌推广内容，想看纯真实评价？</span>
+        <span onclick="showCircle()" style="color:#ff2442;font-weight:700;cursor:pointer;white-space:nowrap;margin-left:8px;">进购物圈 →</span>
+      </div>
+      <!-- 双列瀑布流笔记 -->
+      <div style="columns:2;column-gap:6px;padding:8px 8px 24px;">
+
+        <!-- 卡片1：广告 -->
+        <div style="background:#fff;border-radius:12px;overflow:hidden;break-inside:avoid;margin-bottom:6px;display:inline-block;width:100%;cursor:pointer;">
+          <div style="width:100%;aspect-ratio:3/4;background:linear-gradient(145deg,#fff4e6,#ffd9b0);display:flex;align-items:center;justify-content:center;font-size:44px;position:relative;">
+            🤖
+            <span style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,0.35);color:#fff;font-size:10px;padding:2px 6px;border-radius:4px;font-weight:600;">广告</span>
+          </div>
+          <div style="padding:7px 9px 9px;">
+            <div style="font-size:13px;color:#111;line-height:1.45;margin-bottom:7px;font-weight:500;">PETKIT 全自动猫砂盆！太香了让我来详细开箱</div>
+            <div style="display:flex;align-items:center;gap:5px;">
+              <div style="width:18px;height:18px;border-radius:50%;background:#f0f0f0;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;">P</div>
+              <span style="font-size:11px;color:#bbb;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">PETKIT官方</span>
+              <span style="font-size:11px;color:#bbb;">❤️ 2.3w</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 卡片2：晒单 -->
+        <div style="background:#fff;border-radius:12px;overflow:hidden;break-inside:avoid;margin-bottom:6px;display:inline-block;width:100%;cursor:pointer;position:relative;" onclick="showCircle()">
+          <div style="position:absolute;top:8px;left:8px;background:#ff2442;color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;z-index:2;">晒单</div>
+          <div style="width:100%;aspect-ratio:1/1;background:linear-gradient(145deg,#ffeef1,#ffd6dc);display:flex;align-items:center;justify-content:center;font-size:44px;">🐾</div>
+          <div style="padding:7px 9px 9px;">
+            <div style="font-size:13px;color:#111;line-height:1.45;margin-bottom:7px;font-weight:500;">用了三个月的 PETKIT PURA MAX，真实感受（非广）</div>
+            <div style="display:flex;align-items:center;gap:5px;">
+              <div style="width:18px;height:18px;border-radius:50%;background:#f0f0f0;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;">🐱</div>
+              <span style="font-size:11px;color:#bbb;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">橙子养猫日记</span>
+              <span style="font-size:11px;color:#bbb;">❤️ 4.5w</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 卡片3：推广 -->
+        <div style="background:#fff;border-radius:12px;overflow:hidden;break-inside:avoid;margin-bottom:6px;display:inline-block;width:100%;cursor:pointer;">
+          <div style="width:100%;aspect-ratio:3/4;background:linear-gradient(145deg,#e8f4ff,#c8e0ff);display:flex;align-items:center;justify-content:center;font-size:44px;position:relative;">
+            🐱
+            <span style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,0.25);color:#fff;font-size:10px;padding:2px 6px;border-radius:4px;font-weight:600;">推广</span>
+          </div>
+          <div style="padding:7px 9px 9px;">
+            <div style="font-size:13px;color:#111;line-height:1.45;margin-bottom:7px;font-weight:500;">养了3只猫，用过8款猫砂盆，这个是我的最终答案！</div>
+            <div style="display:flex;align-items:center;gap:5px;">
+              <div style="width:18px;height:18px;border-radius:50%;background:#f0f0f0;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;">🐱</div>
+              <span style="font-size:11px;color:#bbb;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">猫爸日常</span>
+              <span style="font-size:11px;color:#bbb;">❤️ 8.1w</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 卡片4：晒单 -->
+        <div style="background:#fff;border-radius:12px;overflow:hidden;break-inside:avoid;margin-bottom:6px;display:inline-block;width:100%;cursor:pointer;position:relative;" onclick="showCircle()">
+          <div style="position:absolute;top:8px;left:8px;background:#ff2442;color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;z-index:2;">晒单</div>
+          <div style="width:100%;aspect-ratio:3/4;background:linear-gradient(145deg,#f0ffe6,#c8f0b0);display:flex;align-items:center;justify-content:center;font-size:44px;">🏆</div>
+          <div style="padding:7px 9px 9px;">
+            <div style="font-size:13px;color:#111;line-height:1.45;margin-bottom:7px;font-weight:500;">踩了3000块的坑后，这款猫砂盆才是终结者</div>
+            <div style="display:flex;align-items:center;gap:5px;">
+              <div style="width:18px;height:18px;border-radius:50%;background:#f0f0f0;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;">🌻</div>
+              <span style="font-size:11px;color:#bbb;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">向日葵猫场</span>
+              <span style="font-size:11px;color:#bbb;">❤️ 1.9w</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 卡片5：普通 -->
+        <div style="background:#fff;border-radius:12px;overflow:hidden;break-inside:avoid;margin-bottom:6px;display:inline-block;width:100%;cursor:pointer;">
+          <div style="width:100%;aspect-ratio:1/1;background:linear-gradient(145deg,#f5f0ff,#ddd0ff);display:flex;align-items:center;justify-content:center;font-size:44px;position:relative;">
+            🐈
+            <span style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,0.25);color:#fff;font-size:10px;padding:2px 6px;border-radius:4px;font-weight:600;">推广</span>
+          </div>
+          <div style="padding:7px 9px 9px;">
+            <div style="font-size:13px;color:#111;line-height:1.45;margin-bottom:7px;font-weight:500;">养猫新手必看！猫砂盆选购避雷指南</div>
+            <div style="display:flex;align-items:center;gap:5px;">
+              <div style="width:18px;height:18px;border-radius:50%;background:#f0f0f0;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;">🐈</div>
+              <span style="font-size:11px;color:#bbb;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">喵星人养成记</span>
+              <span style="font-size:11px;color:#bbb;">❤️ 2.2w</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 卡片6：晒单 -->
+        <div style="background:#fff;border-radius:12px;overflow:hidden;break-inside:avoid;margin-bottom:6px;display:inline-block;width:100%;cursor:pointer;position:relative;" onclick="showCircle()">
+          <div style="position:absolute;top:8px;left:8px;background:#ff2442;color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;z-index:2;">晒单</div>
+          <div style="width:100%;aspect-ratio:3/4;background:linear-gradient(145deg,#fff0f8,#ffd6ee);display:flex;align-items:center;justify-content:center;font-size:44px;">☕</div>
+          <div style="padding:7px 9px 9px;">
+            <div style="font-size:13px;color:#111;line-height:1.45;margin-bottom:7px;font-weight:500;">从猫矩阵换到小佩CATLINK半年体验</div>
+            <div style="display:flex;align-items:center;gap:5px;">
+              <div style="width:18px;height:18px;border-radius:50%;background:#f0f0f0;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;">☕</div>
+              <span style="font-size:11px;color:#bbb;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">奶茶猫奴</span>
+              <span style="font-size:11px;color:#bbb;">❤️ 4.1w</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div><!-- #s-search -->
+
+  <!-- ===== SCREEN 2: 圈子页 ===== -->
+  <div id="s-circle" class="screen">
+    <div class="circle-hero">
+      <div class="circle-hero-topbar">
+        <div class="circle-back" onclick="goBackFromCircle()">‹</div>
+        <div style="font-size:22px;color:#fff;cursor:pointer;">⋯</div>
+      </div>
+      <div class="circle-cover-row">
+        <div class="circle-logo">🐾</div>
+        <div class="circle-info">
+          <div class="circle-name">自动猫砂盆购物圈</div>
+          <div class="circle-member-row">
+            <div class="circle-avatars">
+              <div class="c-ava">🐱</div><div class="c-ava">☕</div><div class="c-ava">🐾</div><div class="c-ava">🌻</div>
+            </div>
+            <span class="circle-member-count">12,847 位成员</span>
+          </div>
+          <div class="circle-desc">真实晒单 · AI 横评 · 去广告，帮你找到最适合的 ›</div>
+        </div>
+        <button class="circle-join-btn" id="join-btn" onclick="toggleJoin()">加入</button>
+      </div>
+    </div>
+    <div class="circle-tabs-bar">
+      <div class="c-tab active">全部动态</div>
+      <div class="c-tab">实时</div>
+      <div class="c-tab">AI 总结</div>
+      <div class="c-tab">品牌对比</div>
+      <div class="c-tab">晒单</div>
+      <div class="c-tab">问答</div>
+    </div>
+    <div class="circle-scroll">
+      <!-- 置顶 -->
+      <div style="background:#fff;padding:12px 16px;margin-bottom:8px;">
+        <div style="font-size:12px;color:#bbb;font-weight:600;margin-bottom:10px;">📌 置顶动态</div>
+        <div style="display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin-bottom:4px;">
+          <div style="flex-shrink:0;width:168px;background:#f9f9f9;border-radius:12px;padding:11px 12px;cursor:pointer;">
+            <div style="font-size:12px;color:#333;line-height:1.55;margin-bottom:8px;">🎉 购物圈开圈！汇聚真实猫奴晒单和选购经验，欢迎分享～</div>
+            <div style="font-size:11px;color:#bbb;display:flex;align-items:center;gap:5px;"><div style="width:16px;height:16px;border-radius:50%;background:#eee;display:flex;align-items:center;justify-content:center;font-size:8px;">🤖</div>圈子小助手</div>
+          </div>
+          <div style="flex-shrink:0;width:168px;background:#f9f9f9;border-radius:12px;padding:11px 12px;cursor:pointer;">
+            <div style="font-size:12px;color:#333;line-height:1.55;margin-bottom:8px;">🤖【AI 总结】综合 3,847 条晒单：PETKIT MAX 综合第一，小佩性价比最优</div>
+            <div style="font-size:11px;color:#bbb;display:flex;align-items:center;gap:5px;"><div style="width:16px;height:16px;border-radius:50%;background:#eee;display:flex;align-items:center;justify-content:center;font-size:8px;">📊</div>圈子小助手</div>
+          </div>
+        </div>
+      </div>
+      <!-- 动态1 -->
+      <div class="feed-item">
+        <div class="feed-hdr">
+          <div class="feed-ava fa1">😺</div>
+          <div><div class="feed-author">当当！！</div><div class="feed-time">2 小时前 · 河南</div></div>
+          <div class="feed-ellipsis">⋯</div>
+        </div>
+        <div class="feed-text">刚入手了 PETKIT PURA MAX，第一次用真的被惊艳到了！App 会记录猫咪每天上厕所的次数，感觉比猫矩阵强太多了。有小伙伴一起交流～</div>
+        <div class="feed-actions">
+          <div class="feed-action upvoted">▲ 42</div>
+          <div class="feed-action">▽ 2</div>
+          <div class="feed-action">💬 5</div>
+          <div class="feed-action">↗ 分享</div>
+        </div>
+      </div>
+      <!-- 动态2 -->
+      <div class="feed-item">
+        <div class="feed-hdr">
+          <div class="feed-ava fa2">😅</div>
+          <div><div class="feed-author">苦逼三猫奴</div><div class="feed-time">5 小时前 · 北京</div></div>
+          <div class="feed-ellipsis">⋯</div>
+        </div>
+        <div class="feed-text">猫矩阵三只猫真的扛不住，一天倒两次砂差点累死…打算换 PETKIT 了</div>
+        <div class="feed-reply-box">
+          <div class="feed-reply"><strong>圈子AI：</strong>多猫家庭（3只+）推荐 PETKIT PURA MAX（22L），圈内多猫晒单好评率 89%</div>
+          <div class="feed-reply"><strong>橙子养猫日记：</strong>入了！三个月没问题，两猫完全够用</div>
+          <div class="feed-more-reply">共 22 条评论 ›</div>
+        </div>
+        <div class="feed-actions">
+          <div class="feed-action">▲ 118</div>
+          <div class="feed-action">▽ 0</div>
+          <div class="feed-action">💬 22</div>
+          <div class="feed-action">↗ 分享</div>
+        </div>
+      </div>
+      <!-- 动态3 -->
+      <div class="feed-item">
+        <div class="feed-hdr">
+          <div class="feed-ava fa3">☕</div>
+          <div><div class="feed-author">奶茶猫奴</div><div class="feed-time">昨天 · 上海</div></div>
+          <div class="feed-ellipsis">⋯</div>
+        </div>
+        <div class="feed-text">帮大家避坑：胆小的猫不要买全封闭款！！我家毛毛死活不进去，后来换了小佩开放款才解决 😭</div>
+        <div class="feed-actions">
+          <div class="feed-action">▲ 2341</div>
+          <div class="feed-action">▽ 1</div>
+          <div class="feed-action">💬 87</div>
+          <div class="feed-action">↗ 分享</div>
+        </div>
+      </div>
+      <div style="height:20px;"></div>
+    </div>
+    <div class="circle-bottom">
+      <input class="cb-input" placeholder="在圈子里说点什么…" readonly onclick="toast('发帖功能即将上线 🐾')" />
+      <button class="cb-post" onclick="toast('发帖功能即将上线 🐾')">发布</button>
+    </div>
+  </div><!-- #s-circle -->
+
+</div><!-- .phone -->
+<div class="toast" id="toast"></div>
+<script>
+  let circleOrigin = 's-search';
+  function showNote() {
+    switchTo('s-note');
+    document.querySelector('#s-note .note-scroll').scrollTop = 0;
+  }
+  function showSearch() {
+    switchTo('s-search');
+  }
+  function showCircle() {
+    circleOrigin = document.querySelector('.screen.active').id;
+    switchTo('s-circle');
+    document.getElementById('s-circle').querySelector('.circle-scroll').scrollTop = 0;
+  }
+  function goBackFromCircle() { switchTo(circleOrigin); }
+  function goBack(id) { switchTo(id); }
+  function switchTo(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+  let joined = false;
+  function toggleJoin() {
+    joined = !joined;
+    const btn = document.getElementById('join-btn');
+    btn.textContent = joined ? '✓ 已加入' : '加入';
+    btn.classList.toggle('joined', joined);
+    toast(joined ? '已加入圈子，有新晒单会通知你 🔔' : '已退出圈子');
+  }
+  document.querySelectorAll('.circle-tabs-bar .c-tab').forEach(t => {
+    t.addEventListener('click', () => {
+      document.querySelectorAll('.circle-tabs-bar .c-tab').forEach(x => x.classList.remove('active'));
+      t.classList.add('active');
+    });
+  });
+  document.querySelectorAll('.home-tabs .home-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.home-tabs .home-tab').forEach(item => item.classList.remove('active'));
+      tab.classList.add('active');
+    });
+  });
+  function toast(msg) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.style.display = 'block';
+    clearTimeout(window._tt);
+    window._tt = setTimeout(() => { el.style.display = 'none'; }, 2200);
+  }
+</script>
+</body>
+</html>
